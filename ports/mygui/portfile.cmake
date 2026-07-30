@@ -31,12 +31,22 @@ vcpkg_cmake_configure(
 vcpkg_cmake_install()
 vcpkg_cmake_config_fixup(CONFIG_PATH lib/cmake/MyGUI)
 
-if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
-    vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/MYGUI/MyGUI_Platform.h"
-        "#ifndef MYGUI_PLATFORM_H_\n#define MYGUI_PLATFORM_H_"
-        "#ifndef MYGUI_PLATFORM_H_\n#define MYGUI_PLATFORM_H_\n\n#define MYGUI_STATIC"
-    )
+set(mygui_platform_definitions
+    "#ifndef MYGUI_PLATFORM_H_\n#define MYGUI_PLATFORM_H_\n\n#define MYGUI_USE_FREETYPE"
+)
+if("msdf" IN_LIST FEATURES)
+    string(APPEND mygui_platform_definitions "\n#define MYGUI_MSDF_FONTS")
 endif()
+if(NOT "obsolete" IN_LIST FEATURES)
+    string(APPEND mygui_platform_definitions "\n#define MYGUI_DONT_USE_OBSOLETE")
+endif()
+if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
+    string(APPEND mygui_platform_definitions "\n#define MYGUI_STATIC")
+endif()
+vcpkg_replace_string("${CURRENT_PACKAGES_DIR}/include/MYGUI/MyGUI_Platform.h"
+    "#ifndef MYGUI_PLATFORM_H_\n#define MYGUI_PLATFORM_H_"
+    "${mygui_platform_definitions}"
+)
 
 file(REMOVE_RECURSE
     "${CURRENT_PACKAGES_DIR}/debug/include"
